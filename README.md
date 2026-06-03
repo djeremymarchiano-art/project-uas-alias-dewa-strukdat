@@ -1,0 +1,1 @@
+# project-uas-alias-dewa-strukdat
