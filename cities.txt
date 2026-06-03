@@ -1,0 +1,12 @@
+# FORMAT: nama|tipe|populasi|x|y
+# Wilayah dalam game Republica
+Ibukota|ibukota|500000|400|300
+Kota Utara|kota|200000|400|100
+Kota Selatan|kota|180000|400|500
+Kota Barat|kota|220000|150|300
+Kota Timur|kota|190000|650|300
+Desa Utara|desa|50000|250|100
+Desa Selatan|desa|60000|550|500
+Desa Tengah|desa|45000|300|350
+Pelabuhan|pelabuhan|100000|700|200
+Perbatasan|perbatasan|30000|150|500

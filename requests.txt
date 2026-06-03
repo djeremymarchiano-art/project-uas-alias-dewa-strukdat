@@ -1,0 +1,17 @@
+# FORMAT: deskripsi|wilayah|tipe
+# Template permintaan rakyat
+Bantuan Pangan Mendesak|Kota Utara|bantuan
+Laporan Banjir Lokal|Desa Selatan|laporan
+Keluhan Pengangguran Tinggi|Kota Timur|keluhan
+Permintaan Dana Kesehatan|Kota Barat|bantuan
+Laporan Kriminalitas Meningkat|Pelabuhan|laporan
+Keluhan Infrastruktur Jalan Rusak|Desa Tengah|keluhan
+Bantuan Korban Kebakaran|Kota Selatan|bantuan
+Permintaan Air Bersih|Desa Utara|bantuan
+Keluhan Harga Sembako Mahal|Kota Utara|keluhan
+Laporan Pungli di Pasar|Kota Barat|laporan
+Bantuan Rumah Tidak Layak|Perbatasan|bantuan
+Keluhan Polusi Pabrik|Kota Timur|keluhan
+Laporan Pencemaran Sungai|Desa Selatan|laporan
+Permintaan Lampu Jalan|Desa Tengah|bantuan
+Keluhan Pelayanan Rumah Sakit|Kota Selatan|keluhan
