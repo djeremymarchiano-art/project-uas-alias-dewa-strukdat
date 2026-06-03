@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REPUBLICA — Nation Crisis Simulator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&family=Courier+Prime:wght@400;700&display=swap');
+
+:root {
+  --bg:         #0a0c1a;
+  --bg2:        #111325;
+  --bg3:        #1a1d35;
+  --panel:      #13162b;
+  --border:     #2a3060;
+  --border2:    #3d4480;
+  --gold:       #f0c040;
+  --gold2:      #ffd966;
+  --red:        #e84040;
+  --red2:       #ff6060;
+  --green:      #40c060;
+  --green2:     #60e080;
+  --blue:       #4080ff;
+  --blue2:      #60a0ff;
+  --orange:     #ff8c00;
+  --teal:       #20c8b0;
+  --purple:     #9060e0;
+  --text:       #d0d8ff;
+  --text2:      #8090c0;
+  --pixel:      'Press Start 2P', monospace;
+  --mono:       'VT323', monospace;
+  --body:       'Courier Prime', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== SCANLINES OVERLAY ===== */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ===== STAR BACKGROUND ===== */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 55%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 25%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 70%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 40%, rgba(255,255,255,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 20% 80%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 90%, rgba(255,255,255,0.3) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== LAYOUT ===== */
+#app {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 12px;
+}
+
+/* ===== HEADER ===== */
+header {
+  border-bottom: 2px solid var(--border2);
+  padding: 12px 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(180deg, rgba(20,24,50,0.98) 0%, transparent 100%);
+}
+
+.logo {
+  font-family: var(--pixel);
+  font-size: 14px;
+  color: var(--gold);
+  text-shadow: 0 0 16px rgba(240,192,64,0.6), 2px 2px 0 rgba(0,0,0,0.8);
+  letter-spacing: 2px;
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%,100% { text-shadow: 0 0 16px rgba(240,192,64,0.6), 2px 2px 0 rgba(0,0,0,0.8); }
+  50%      { text-shadow: 0 0 30px rgba(240,192,64,1),   2px 2px 0 rgba(0,0,0,0.8); }
+}
+
+.header-day {
+  font-family: var(--pixel);
+  font-size: 9px;
+  color: var(--teal);
+  background: rgba(32,200,176,0.1);
+  border: 1px solid var(--teal);
+  padding: 6px 12px;
+  letter-spacing: 1px;
+}
+
+.header-budget {
+  font-family: var(--pixel);
+  font-size: 9px;
+  color: var(--gold2);
+  background: rgba(240,192,64,0.08);
+  border: 1px solid var(--gold);
+  padding: 6px 12px;
+}
+
+/* ===== MAIN GRID ===== */
+main {
+  display: grid;
+  grid-template-columns: 280px 1fr 300px;
+  gap: 10px;
+  padding: 10px 0;
+  min-height: 0;
+}
+
+/* ===== PANEL BASE ===== */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.panel-title {
+  font-family: var(--pixel);
+  font-size: 7px;
+  color: var(--gold);
+  background: linear-gradient(90deg, rgba(240,192,64,0.15), transparent);
+  border-bottom: 1px solid var(--border2);
+  padding: 8px 10px;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel-title .icon { font-size: 12px; }
+.panel-body { padding: 10px; overflow-y: auto; }
+
+/* ===== STATS BARS ===== */
+.stat-row {
+  margin-bottom: 10px;
+}
+
+.stat-label {
+  font-family: var(--pixel);
+  font-size: 6px;
+  color: var(--text2);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.stat-val {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.bar-track {
+  height: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+
+.bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 50%, rgba(255,255,255,0.15) 100%);
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.bar-ekonomi    { background: linear-gradient(90deg, #2060d0, #40c0ff); }
+.bar-keamanan   { background: linear-gradient(90deg, #c04020, #ff8040); }
+.bar-kepercayaan{ background: linear-gradient(90deg, #206020, #40e060); }
+.bar-stabilitas { background: linear-gradient(90deg, #806020, #f0c040); }
+
+/* ===== MAP CANVAS ===== */
+#map-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+#map-canvas {
+  flex: 1;
+  width: 100%;
+  min-height: 320px;
+  cursor: crosshair;
+}
+
+/* ===== RIGHT PANEL TABS ===== */
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border2);
+}
+
+.tab-btn {
+  font-family: var(--pixel);
+  font-size: 6px;
+  color: var(--text2);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 10px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.tab-btn:hover   { color: var(--text); background: rgba(255,255,255,0.04); }
+.tab-btn.active  { color: var(--gold); border-bottom-color: var(--gold); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ===== CARDS ===== */
+.card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-left: 3px solid;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.card:hover { background: rgba(255,255,255,0.06); }
+
+.card-request  { border-left-color: var(--blue); }
+.card-crisis   { border-left-color: var(--red); }
+.card-policy   { border-left-color: var(--green); }
+.card-locked   { border-left-color: var(--text2); opacity: 0.5; }
+.card-taken    { border-left-color: var(--teal); opacity: 0.7; }
+
+.card-title {
+  font-family: var(--pixel);
+  font-size: 6px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.card-sub {
+  font-family: var(--body);
+  font-size: 11px;
+  color: var(--text2);
+  margin-bottom: 6px;
+}
+
+.card-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.badge {
+  font-family: var(--pixel);
+  font-size: 5px;
+  padding: 2px 5px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.badge-red    { background: rgba(232,64,64,0.2);  color: var(--red2);   border: 1px solid var(--red); }
+.badge-blue   { background: rgba(64,128,255,0.2); color: var(--blue2);  border: 1px solid var(--blue); }
+.badge-green  { background: rgba(64,192,96,0.2);  color: var(--green2); border: 1px solid var(--green); }
+.badge-gold   { background: rgba(240,192,64,0.2); color: var(--gold2);  border: 1px solid var(--gold); }
+.badge-orange { background: rgba(255,140,0,0.2);  color: #ffaa40;       border: 1px solid var(--orange); }
+.badge-purple { background: rgba(144,96,224,0.2); color: #b080ff;       border: 1px solid var(--purple); }
+
+/* ===== BUTTONS ===== */
+.btn-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.btn {
+  font-family: var(--pixel);
+  font-size: 5px;
+  padding: 5px 8px;
+  border: 1px solid;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.btn:hover::before { opacity: 0.1; }
+.btn:active::before { opacity: 0.2; }
+
+.btn-primary { color: var(--gold);  border-color: var(--gold); }
+.btn-danger  { color: var(--red2);  border-color: var(--red); }
+.btn-success { color: var(--green2);border-color: var(--green); }
+.btn-info    { color: var(--blue2); border-color: var(--blue); }
+.btn-warn    { color: #ffaa40;      border-color: var(--orange); }
+.btn-muted   { color: var(--text2); border-color: var(--border2); }
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===== URGENCY BAR ===== */
+.urgency-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.05);
+  margin-top: 4px;
+  position: relative;
+}
+
+.urgency-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--orange), var(--red));
+  background-size: 200% 100%;
+}
+
+/* ===== MAP TOOLTIP ===== */
+#map-tooltip {
+  position: fixed;
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  padding: 8px 12px;
+  font-family: var(--body);
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 100;
+  display: none;
+  max-width: 200px;
+}
+
+#map-tooltip strong {
+  font-family: var(--pixel);
+  font-size: 6px;
+  color: var(--gold);
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* ===== EVENT LOG ===== */
+#event-log {
+  background: rgba(0,0,0,0.3);
+  border-top: 1px solid var(--border2);
+  padding: 8px 12px;
+  height: 80px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.log-entry {
+  font-family: var(--body);
+  font-size: 12px;
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.log-day {
+  font-family: var(--pixel);
+  font-size: 5px;
+  color: var(--text2);
+  min-width: 40px;
+  margin-top: 2px;
+}
+
+.log-msg { color: var(--text); flex: 1; }
+.log-ok   .log-msg { color: var(--green2); }
+.log-warn .log-msg { color: var(--orange); }
+.log-crit .log-msg { color: var(--red2); }
+.log-info .log-msg { color: var(--blue2); }
+
+/* ===== FOOTER / ACTIONS ===== */
+footer {
+  border-top: 1px solid var(--border2);
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.footer-btn {
+  font-family: var(--pixel);
+  font-size: 6px;
+  padding: 8px 14px;
+  border: 1px solid;
+  cursor: pointer;
+  background: transparent;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.footer-btn-next {
+  color: var(--gold);
+  border-color: var(--gold);
+  background: rgba(240,192,64,0.08);
+}
+
+.footer-btn-next:hover {
+  background: rgba(240,192,64,0.2);
+  box-shadow: 0 0 12px rgba(240,192,64,0.3);
+}
+
+#turn-indicator {
+  font-family: var(--pixel);
+  font-size: 6px;
+  color: var(--teal);
+  margin-left: auto;
+}
+
+/* ===== GAME OVER OVERLAY ===== */
+#gameover-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#gameover-overlay.show { display: flex; }
+
+.gameover-title {
+  font-family: var(--pixel);
+  font-size: 32px;
+  color: var(--red);
+  text-shadow: 0 0 40px rgba(232,64,64,0.8);
+  animation: gameover-pulse 1s ease-in-out infinite;
+}
+
+@keyframes gameover-pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.gameover-msg {
+  font-family: var(--body);
+  font-size: 18px;
+  color: var(--text);
+  max-width: 500px;
+  text-align: center;
+}
+
+.gameover-days {
+  font-family: var(--pixel);
+  font-size: 12px;
+  color: var(--gold);
+}
+
+/* ===== PIXEL DECORATIONS ===== */
+.px-flag {
+  width: 24px; height: 16px;
+  display: inline-block;
+  image-rendering: pixelated;
+  background: linear-gradient(180deg,
+    var(--gold) 0%, var(--gold) 33%,
+    var(--bg2)  33%, var(--bg2)  66%,
+    var(--red)  66%, var(--red)  100%
+  );
+  border: 1px solid var(--border2);
+  vertical-align: middle;
+  margin-right: 8px;
+  animation: flag-wave 2s ease-in-out infinite;
+}
+
+@keyframes flag-wave {
+  0%,100% { transform: skewY(0deg); }
+  25% { transform: skewY(2deg); }
+  75% { transform: skewY(-2deg); }
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); }
+::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+/* ===== NOTIFICATION ===== */
+#notif {
+  position: fixed;
+  bottom: 100px; right: 20px;
+  font-family: var(--pixel);
+  font-size: 7px;
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--gold);
+  padding: 10px 14px;
+  max-width: 280px;
+  z-index: 200;
+  transform: translateX(120%);
+  transition: transform 0.3s ease;
+}
+
+#notif.show { transform: translateX(0); }
+
+/* ===== PIXEL MAP NODES ===== */
+.pulsing { animation: pulse-ring 2s ease-in-out infinite; }
+@keyframes pulse-ring {
+  0%,100% { r: 8; opacity: 1; }
+  50% { r: 12; opacity: 0.5; }
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 1000px) {
+  main {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+  #map-canvas { min-height: 250px; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- HEADER -->
+  <header>
+    <div>
+      <span class="px-flag"></span>
+      <span class="logo">REPUBLICA</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <span class="header-day" id="h-day">HARI KE-1</span>
+      <span class="header-budget" id="h-budget">💰 500M</span>
+      <div style="font-family:var(--pixel);font-size:6px;color:var(--text2);">NATION CRISIS SIMULATOR</div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+    <!-- LEFT: Stats + Requests -->
+    <div style="display:flex;flex-direction:column;gap:10px;min-height:0;">
+
+      <!-- STATS PANEL -->
+      <div class="panel">
+        <div class="panel-title"><span class="icon">📊</span> STATUS NEGARA</div>
+        <div class="panel-body" id="stats-panel">
+          <div class="stat-row">
+            <div class="stat-label">EKONOMI <span class="stat-val" id="val-ekonomi">70</span></div>
+            <div class="bar-track"><div class="bar-fill bar-ekonomi" id="bar-ekonomi" style="width:70%"></div></div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-label">KEAMANAN <span class="stat-val" id="val-keamanan">65</span></div>
+            <div class="bar-track"><div class="bar-fill bar-keamanan" id="bar-keamanan" style="width:65%"></div></div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-label">KEPERCAYAAN <span class="stat-val" id="val-kepercayaan">60</span></div>
+            <div class="bar-track"><div class="bar-fill bar-kepercayaan" id="bar-kepercayaan" style="width:60%"></div></div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-label">STABILITAS <span class="stat-val" id="val-stabilitas">75</span></div>
+            <div class="bar-track"><div class="bar-fill bar-stabilitas" id="bar-stabilitas" style="width:75%"></div></div>
+          </div>
+          <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+          <div style="font-family:var(--pixel);font-size:6px;color:var(--text2);display:flex;justify-content:space-between;">
+            <span>ANTRIAN: <span id="h-req-count" style="color:var(--blue2)">0</span></span>
+            <span>KRISIS: <span id="h-crisis-count" style="color:var(--red2)">0</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- REQUEST QUEUE PANEL -->
+      <div class="panel" style="flex:1;min-height:0;">
+        <div class="panel-title"><span class="icon">📩</span> REQUEST RAKYAT (QUEUE)</div>
+        <div class="panel-body" id="request-list" style="max-height:280px;overflow-y:auto;">
+          <div style="font-family:var(--body);font-size:12px;color:var(--text2);text-align:center;padding:20px;">
+            Belum ada request...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: MAP -->
+    <div class="panel" id="map-panel">
+      <div class="panel-title"><span class="icon">🗺️</span> PETA WILAYAH — GRAPH (BFS/DFS/DIJKSTRA)</div>
+      <canvas id="map-canvas"></canvas>
+      <div id="event-log"></div>
+    </div>
+
+    <!-- RIGHT: Crisis + Policy tabs -->
+    <div class="panel" style="display:flex;flex-direction:column;min-height:0;">
+      <div class="panel-title"><span class="icon">⚠️</span> PANEL AKSI</div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('crisis')">🚨 KRISIS</button>
+        <button class="tab-btn" onclick="switchTab('policy')">🏛️ KEBIJAKAN</button>
+        <button class="tab-btn" onclick="switchTab('map-ctrl')">🗺️ WILAYAH</button>
+      </div>
+
+      <!-- CRISIS TAB -->
+      <div class="tab-content active" id="tab-crisis" style="flex:1;overflow-y:auto;padding:8px;">
+        <div id="crisis-list">
+          <div style="font-family:var(--body);font-size:12px;color:var(--text2);text-align:center;padding:20px;">
+            Tidak ada krisis aktif
+          </div>
+        </div>
+      </div>
+
+      <!-- POLICY TAB -->
+      <div class="tab-content" id="tab-policy" style="flex:1;overflow-y:auto;padding:8px;">
+        <div id="policy-list"></div>
+      </div>
+
+      <!-- MAP CTRL TAB -->
+      <div class="tab-content" id="tab-map-ctrl" style="flex:1;overflow-y:auto;padding:8px;">
+        <div id="region-list"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <button class="footer-btn footer-btn-next" onclick="nextDay()">▶ LANJUT HARI BERIKUTNYA</button>
+    <button class="footer-btn" style="color:var(--blue2);border-color:var(--blue);" onclick="showHelp()">? BANTUAN</button>
+    <button class="footer-btn" style="color:var(--red2);border-color:var(--red);" onclick="resetGame()">↺ MULAI ULANG</button>
+    <span id="turn-indicator">MENUNGGU AKSI PEMAIN...</span>
+  </footer>
+</div>
+
+<!-- MAP TOOLTIP -->
+<div id="map-tooltip"></div>
+
+<!-- NOTIFICATION -->
+<div id="notif"></div>
+
+<!-- GAME OVER -->
+<div id="gameover-overlay">
+  <div class="gameover-title">GAME OVER</div>
+  <div class="gameover-msg" id="gameover-msg"></div>
+  <div class="gameover-days" id="gameover-days"></div>
+  <button class="footer-btn footer-btn-next" onclick="resetGame()" style="margin-top:10px;">↺ MAIN LAGI</button>
+</div>
+
+<script>
+
+class RequestQueue {
+  constructor() {
+    this.items = [];
+    this.nextId = 1;
+  }
+  enqueue(type, wilayah, deskripsi, hari) {
+    this.items.push({ id: this.nextId++, type, wilayah, desc: deskripsi, hari_masuk: hari, kemarahan: 1 });
+  }
+  dequeue() {
+    return this.items.shift();
+  }
+  peek() { return this.items[0] || null; }
+  isEmpty() { return this.items.length === 0; }
+  get size() { return this.items.length; }
+
+  
+  updateAnger(hariSekarang) {
+    let delta = 0;
+    for (const r of this.items) {
+      const tunggu = hariSekarang - r.hari_masuk;
+      const newAnger = Math.min(10, 1 + Math.floor(tunggu / 2));
+      if (newAnger > r.kemarahan) {
+        delta += newAnger - r.kemarahan;
+        r.kemarahan = newAnger;
+      }
+    }
+    return delta;
+  }
+}
+
+
+class CrisisQueue {
+  constructor() { this.heap = []; this.nextId = 1; }
+
+  
+  _parent(i) { return Math.floor((i - 1) / 2); }
+  _left(i)   { return 2 * i + 1; }
+  _right(i)  { return 2 * i + 2; }
+
+  
+  _bubbleUp(i) {
+    while (i > 0 && this.heap[this._parent(i)].urgensi < this.heap[i].urgensi) {
+      [this.heap[this._parent(i)], this.heap[i]] = [this.heap[i], this.heap[this._parent(i)]];
+      i = this._parent(i);
+    }
+  }
+
+  
+  _heapifyDown(i) {
+    const n = this.heap.length;
+    let largest = i;
+    const l = this._left(i), r = this._right(i);
+    if (l < n && this.heap[l].urgensi > this.heap[largest].urgensi) largest = l;
+    if (r < n && this.heap[r].urgensi > this.heap[largest].urgensi) largest = r;
+    if (largest !== i) {
+      [this.heap[largest], this.heap[i]] = [this.heap[i], this.heap[largest]];
+      this._heapifyDown(largest);
+    }
+  }
+
+  push(nama, wilayah, urgensi, de, dk, ds, hari) {
+    this.heap.push({ id: this.nextId++, nama, wilayah, urgensi, de, dk, ds, hari_muncul: hari });
+    this._bubbleUp(this.heap.length - 1);
+  }
+
+  pop() {
+    if (this.isEmpty()) return null;
+    const top = this.heap[0];
+    this.heap[0] = this.heap[this.heap.length - 1];
+    this.heap.pop();
+    if (!this.isEmpty()) this._heapifyDown(0);
+    return top;
+  }
+
+  peek() { return this.heap[0] || null; }
+  isEmpty() { return this.heap.length === 0; }
+  get size() { return this.heap.length; }
+}
+
+
+class RegionalGraph {
+  constructor() {
+    this.nodes = [];
+    this.edges = []; 
+  }
+
+  addNode(nama, tipe, populasi, x, y) {
+    const id = this.nodes.length;
+    this.nodes.push({ id, nama, tipe, populasi, x, y,
+      stabilitas: 100, ekonomi: 70, keamanan: 70,
+      demo_aktif: false, krisis_lokal: false, adj: [] });
+    return id;
+  }
+
+  addEdge(u, v, weight, tipe = 'darat') {
+    this.nodes[u].adj.push({ to: v, weight, tipe });
+    this.nodes[v].adj.push({ to: u, weight, tipe });
+    this.edges.push({ from: u, to: v, weight, tipe });
+  }
+
+  
+  bfsSpreadDemo(source) {
+    if (this.nodes[source].stabilitas > 30) return [];
+    const visited = new Set();
+    const queue = [source];
+    const terdampak = [];
+    visited.add(source);
+    this.nodes[source].demo_aktif = true;
+
+    while (queue.length > 0) {
+      const u = queue.shift();
+      terdampak.push(u);
+      for (const e of this.nodes[u].adj) {
+        const v = e.to;
+        if (!visited.has(v) && this.nodes[v].stabilitas < 50 && e.weight <= 3) {
+          visited.add(v);
+          this.nodes[v].demo_aktif = true;
+          this.nodes[v].stabilitas = Math.max(0, this.nodes[v].stabilitas - 10);
+          queue.push(v);
+        }
+      }
+    }
+    return terdampak;
+  }
+
+  
+  dfsExploreDampak(source) {
+    const visited = new Set();
+    const stack = [source];
+    const hasil = [];
+    while (stack.length > 0) {
+      const u = stack.pop();
+      if (visited.has(u)) continue;
+      visited.add(u);
+      hasil.push(u);
+      for (const e of this.nodes[u].adj) {
+        if (!visited.has(e.to) && this.nodes[e.to].krisis_lokal)
+          stack.push(e.to);
+      }
+    }
+    return hasil;
+  }
+
+  
+  dijkstra(source) {
+    const n = this.nodes.length;
+    const dist = new Array(n).fill(Infinity);
+    const prev = new Array(n).fill(-1);
+    dist[source] = 0;
+
+    
+    const pq = [{ d: 0, u: source }];
+
+    while (pq.length > 0) {
+      pq.sort((a, b) => a.d - b.d);
+      const { d, u } = pq.shift();
+      if (d > dist[u]) continue;
+
+      for (const e of this.nodes[u].adj) {
+        const v = e.to, w = e.weight;
+        if (dist[u] + w < dist[v]) {
+          dist[v] = dist[u] + w;
+          prev[v] = u;
+          pq.push({ d: dist[v], u: v });
+        }
+      }
+    }
+    return { dist, prev };
+  }
+
+  getPath(target, prev) {
+    const path = [];
+    for (let cur = target; cur !== -1; cur = prev[cur]) path.push(cur);
+    return path.reverse();
+  }
+
+  distribusiBantuan(id, jumlah) {
+    const w = this.nodes[id];
+    w.ekonomi    = Math.min(100, w.ekonomi    + Math.floor(jumlah / 3));
+    w.stabilitas = Math.min(100, w.stabilitas + Math.floor(jumlah / 4));
+    w.demo_aktif = w.stabilitas < 30;
+  }
+
+  updateHarian() {
+    for (const w of this.nodes) {
+      if (w.demo_aktif)   { w.stabilitas = Math.max(0, w.stabilitas - 2); w.ekonomi = Math.max(0, w.ekonomi - 1); w.keamanan = Math.max(0, w.keamanan - 1); }
+      if (w.krisis_lokal) { w.ekonomi    = Math.max(0, w.ekonomi    - 3); w.stabilitas = Math.max(0, w.stabilitas - 2); }
+      if (!w.demo_aktif && !w.krisis_lokal) w.stabilitas = Math.min(100, w.stabilitas + 1);
+    }
+  }
+}
+
+
+class DecisionTree {
+  constructor() {
+    this.nodes = {};
+    this.root = null;
+    this.nextId = 1;
+  }
+
+  _makeNode(nama, desc, kat, efek, parentId = null) {
+    const id = this.nextId++;
+    const node = { id, nama, desc, kat, efek, parentId,
+                   tersedia: parentId === null, sudah_diambil: false, children: [] };
+    this.nodes[id] = node;
+    return node;
+  }
+
+  _addChild(parentId, nama, desc, kat, efek) {
+    const node = this._makeNode(nama, desc, kat, efek, parentId);
+    node.tersedia = false; 
+    if (this.nodes[parentId]) this.nodes[parentId].children.push(node);
+    return node;
+  }
+
+  init() {
+    this.root = this._makeNode('PUSAT KEBIJAKAN','Root','root',{e:0,k:0,c:0,s:0,biaya:0});
+    this.root.tersedia = false;
+
+    
+    const ekon = this._addChild(this.root.id,'Kebijakan Ekonomi','Manajemen fiskal','ekonomi',{e:5,k:0,c:3,s:2,biaya:100});
+    ekon.tersedia = true;
+    this._addChild(ekon.id,'Subsidi Pangan','Turunkan harga pokok','ekonomi',{e:-2,k:0,c:8,s:5,biaya:50});
+    this._addChild(ekon.id,'Cetak Uang','Tambah uang beredar','ekonomi',{e:-8,k:0,c:2,s:-3,biaya:0});
+    this._addChild(ekon.id,'Pinjaman LN','Pinjaman internasional','ekonomi',{e:10,k:-2,c:1,s:3,biaya:0});
+    const pajak = this._addChild(ekon.id,'Reformasi Pajak','Restrukturisasi pajak','ekonomi',{e:7,k:0,c:3,s:4,biaya:80});
+    this._addChild(pajak.id,'Pajak Progresif','Pajak untuk orang kaya','ekonomi',{e:4,k:0,c:6,s:3,biaya:60});
+    this._addChild(pajak.id,'Pajak Impor','Bea cukai produk luar','ekonomi',{e:5,k:-1,c:2,s:2,biaya:40});
+
+    
+    const aman = this._addChild(this.root.id,'Kebijakan Keamanan','Penegakan hukum','keamanan',{e:-2,k:8,c:2,s:5,biaya:120});
+    aman.tersedia = true;
+    this._addChild(aman.id,'Tambah Polisi','Rekrut polisi baru','keamanan',{e:-3,k:10,c:1,s:6,biaya:80});
+    this._addChild(aman.id,'Darurat Militer','Kerahkan militer','keamanan',{e:-5,k:15,c:-5,s:8,biaya:100});
+    this._addChild(aman.id,'Perbaiki Penjara','Renovasi fasilitas','keamanan',{e:-2,k:5,c:3,s:2,biaya:60});
+
+    
+    const sosial = this._addChild(this.root.id,'Kebijakan Sosial','Layanan masyarakat','sosial',{e:-3,k:1,c:10,s:6,biaya:90});
+    sosial.tersedia = true;
+    this._addChild(sosial.id,'Bansos Darurat','Bantuan langsung tunai','sosial',{e:-4,k:0,c:12,s:7,biaya:70});
+    this._addChild(sosial.id,'Vaksinasi Massal','Program kesehatan','sosial',{e:-2,k:1,c:8,s:4,biaya:80});
+    const pend = this._addChild(sosial.id,'Program Pendidikan','Investasi SDM','sosial',{e:2,k:1,c:7,s:3,biaya:60});
+    this._addChild(pend.id,'Beasiswa Nasional','Beasiswa rakyat kecil','sosial',{e:1,k:0,c:9,s:2,biaya:50});
+    this._addChild(pend.id,'Sekolah Gratis','Pendidikan gratis','sosial',{e:-1,k:0,c:10,s:3,biaya:80});
+
+    
+    const infra = this._addChild(this.root.id,'Kebijakan Infrastruktur','Pembangunan fisik','infrastruktur',{e:3,k:1,c:5,s:4,biaya:150});
+    infra.tersedia = true;
+    this._addChild(infra.id,'Bangun Jalan','Infrastruktur darat','infrastruktur',{e:5,k:1,c:4,s:3,biaya:120});
+    this._addChild(infra.id,'Bangun RS','Fasilitas kesehatan','infrastruktur',{e:2,k:2,c:8,s:4,biaya:130});
+    this._addChild(infra.id,'Perbaiki Bendungan','Cegah banjir','infrastruktur',{e:3,k:1,c:5,s:6,biaya:110});
+  }
+
+  
+  preOrder(node = null, result = []) {
+    if (!node) node = this.root;
+    if (!node) return result;
+    result.push(node);
+    for (const c of node.children) this.preOrder(c, result);
+    return result;
+  }
+
+  
+  postOrderEffect(node = null) {
+    if (!node) node = this.root;
+    let total = {e:0,k:0,c:0,s:0,biaya:0};
+    for (const child of node.children) {
+      const ce = this.postOrderEffect(child);
+      if (child.sudah_diambil) { total.e+=ce.e; total.k+=ce.k; total.c+=ce.c; total.s+=ce.s; total.biaya+=ce.biaya; }
+    }
+    if (node.sudah_diambil) { total.e+=node.efek.e; total.k+=node.efek.k; total.c+=node.efek.c; total.s+=node.efek.s; total.biaya+=node.efek.biaya; }
+    return total;
+  }
+
+  getAvailable() {
+    return this.preOrder().filter(n => n.tersedia && !n.sudah_diambil && n.kat !== 'root');
+  }
+
+  take(id, state) {
+    const node = this.nodes[id];
+    if (!node || !node.tersedia || node.sudah_diambil) return 'Tidak bisa diambil.';
+    if (state.anggaran < node.efek.biaya) return `Anggaran kurang! (Butuh ${node.efek.biaya}M)`;
+    state.anggaran -= node.efek.biaya;
+    state.ekonomi     = Math.max(0, Math.min(100, state.ekonomi     + node.efek.e));
+    state.keamanan    = Math.max(0, Math.min(100, state.keamanan    + node.efek.k));
+    state.kepercayaan = Math.max(0, Math.min(100, state.kepercayaan + node.efek.c));
+    state.stabilitas  = Math.max(0, Math.min(100, state.stabilitas  + node.efek.s));
+    node.sudah_diambil = true;
+    for (const c of node.children) c.tersedia = true;
+    return `✓ "${node.nama}" berhasil diterapkan!`;
+  }
+}
+
+
+const STATE = {
+  hari: 1, ekonomi: 70, keamanan: 65,
+  kepercayaan: 60, stabilitas: 75,
+  anggaran: 500, game_over: false
+};
+
+const reqQueue    = new RequestQueue();
+const crisisQueue = new CrisisQueue();
+const gameMap     = new RegionalGraph();
+const policyTree  = new DecisionTree();
+
+const REQUEST_TEMPLATES = [
+  {type:'bantuan', wilayah:'Kota Utara',   desc:'Bantuan Pangan Mendesak'},
+  {type:'laporan', wilayah:'Desa Selatan', desc:'Laporan Banjir Lokal'},
+  {type:'keluhan', wilayah:'Kota Timur',   desc:'Keluhan Pengangguran Tinggi'},
+  {type:'bantuan', wilayah:'Kota Barat',   desc:'Permintaan Dana Kesehatan'},
+  {type:'laporan', wilayah:'Pelabuhan',    desc:'Laporan Kriminalitas Meningkat'},
+  {type:'keluhan', wilayah:'Desa Tengah',  desc:'Keluhan Jalan Rusak'},
+  {type:'bantuan', wilayah:'Kota Selatan', desc:'Bantuan Korban Kebakaran'},
+  {type:'bantuan', wilayah:'Desa Utara',   desc:'Permintaan Air Bersih'},
+  {type:'keluhan', wilayah:'Kota Utara',   desc:'Keluhan Harga Sembako Mahal'},
+  {type:'laporan', wilayah:'Kota Barat',   desc:'Laporan Pungli di Pasar'},
+];
+
+const CRISIS_TEMPLATES = [
+  {nama:'Inflasi Tinggi',    wilayah:'Nasional',     urgensi:70, de:-8, dk:-2, ds:-7},
+  {nama:'Banjir Besar',      wilayah:'Desa Selatan', urgensi:80, de:-5, dk:-3, ds:-10},
+  {nama:'Kelangkaan BBM',    wilayah:'Kota Timur',   urgensi:75, de:-7, dk:-4, ds:-8},
+  {nama:'Kerusuhan Pasar',   wilayah:'Kota Barat',   urgensi:85, de:-6, dk:-8, ds:-12},
+  {nama:'Gempa Bumi',        wilayah:'Kota Selatan', urgensi:90, de:-10,dk:-5, ds:-15},
+  {nama:'Wabah Penyakit',    wilayah:'Desa Tengah',  urgensi:88, de:-7, dk:-3, ds:-10},
+  {nama:'Krisis Listrik',    wilayah:'Kota Utara',   urgensi:65, de:-6, dk:-2, ds:-6},
+  {nama:'Skandal Korupsi',   wilayah:'Nasional',     urgensi:72, de:-4, dk:-5, ds:-9},
+];
+
+function rand(n) { return Math.floor(Math.random() * n); }
+function clamp(v) { return Math.max(0, Math.min(100, v)); }
+
+
+function initGame() {
+  
+  const id0 = gameMap.addNode('Ibukota',     'ibukota',   500000, 400, 290);
+  const id1 = gameMap.addNode('Kota Utara',  'kota',      200000, 390,  80);
+  const id2 = gameMap.addNode('Kota Selatan','kota',      180000, 390, 490);
+  const id3 = gameMap.addNode('Kota Barat',  'kota',      220000, 140, 270);
+  const id4 = gameMap.addNode('Kota Timur',  'kota',      190000, 630, 270);
+  const id5 = gameMap.addNode('Desa Utara',  'desa',       50000, 240,  80);
+  const id6 = gameMap.addNode('Desa Selatan','desa',       60000, 530, 480);
+  const id7 = gameMap.addNode('Desa Tengah', 'desa',       45000, 280, 330);
+  const id8 = gameMap.addNode('Pelabuhan',   'pelabuhan', 100000, 690, 170);
+  const id9 = gameMap.addNode('Perbatasan',  'perbatasan', 30000, 140, 470);
+
+  gameMap.addEdge(id0, id1, 2); gameMap.addEdge(id0, id2, 2);
+  gameMap.addEdge(id0, id3, 2); gameMap.addEdge(id0, id4, 2);
+  gameMap.addEdge(id0, id7, 1); gameMap.addEdge(id1, id5, 1);
+  gameMap.addEdge(id1, id8, 2); gameMap.addEdge(id2, id6, 1);
+  gameMap.addEdge(id2, id9, 3); gameMap.addEdge(id3, id5, 2);
+  gameMap.addEdge(id3, id9, 2); gameMap.addEdge(id4, id6, 1);
+  gameMap.addEdge(id4, id8, 1, 'laut'); gameMap.addEdge(id7, id3, 1);
+  gameMap.addEdge(id7, id4, 1);
+
+  policyTree.init();
+  renderAll();
+  resizeCanvas();
+  drawMap();
+  addLog('Game dimulai! Selamat datang di REPUBLICA.', 'info');
+  addLog('Anda adalah pemimpin negara. Jaga stabilitas!', 'info');
+  renderPolicies();
+  renderRegions();
+}
+
+
+function nextDay() {
+  if (STATE.game_over) return;
+  STATE.hari++;
+
+  
+  const numReq = 2 + rand(2);
+  for (let i = 0; i < numReq; i++) {
+    const t = REQUEST_TEMPLATES[rand(REQUEST_TEMPLATES.length)];
+    reqQueue.enqueue(t.type, t.wilayah, t.desc, STATE.hari);
+  }
+
+  
+  const crisisChance = Math.min(60, 20 + STATE.hari * 2);
+  if (rand(100) < crisisChance) {
+    const t = CRISIS_TEMPLATES[rand(CRISIS_TEMPLATES.length)];
+    const diffBonus = Math.floor(STATE.hari / 5) * 2;
+    crisisQueue.push(t.nama, t.wilayah, Math.min(100, t.urgensi + diffBonus),
+                     t.de, t.dk, t.ds, STATE.hari);
+    addLog(`⚠️ Krisis baru: "${t.nama}" di ${t.wilayah}! Urgensi: ${Math.min(100, t.urgensi + diffBonus)}`, 'crit');
+  }
+
+  
+  const angerDelta = reqQueue.updateAnger(STATE.hari);
+  STATE.kepercayaan = clamp(STATE.kepercayaan - Math.floor(angerDelta / 2));
+  if (angerDelta > 0) addLog(`📣 ${reqQueue.size} request belum ditangani. Kemarahan rakyat meningkat!`, 'warn');
+
+ 
+  gameMap.updateHarian();
+
+ 
+  for (let i = 0; i < gameMap.nodes.length; i++) {
+    if (gameMap.nodes[i].stabilitas < 30 && !gameMap.nodes[i].demo_aktif) {
+      const terdampak = gameMap.bfsSpreadDemo(i);
+      if (terdampak.length > 0) {
+        STATE.keamanan = clamp(STATE.keamanan - terdampak.length * 2);
+        STATE.kepercayaan = clamp(STATE.kepercayaan - terdampak.length);
+        addLog(`🔥 Demo menyebar via BFS ke ${terdampak.length} wilayah!`, 'crit');
+      }
+    }
+  }
+
+  
+  for (const c of crisisQueue.heap) {
+    STATE.ekonomi    = clamp(STATE.ekonomi    + Math.floor(c.de / 5));
+    STATE.keamanan   = clamp(STATE.keamanan   + Math.floor(c.dk / 5));
+    STATE.stabilitas = clamp(STATE.stabilitas + Math.floor(c.ds / 5));
+  }
+
+  
+  let avgWilayah = gameMap.nodes.reduce((s, w) => s + w.stabilitas, 0) / gameMap.nodes.length;
+  STATE.stabilitas = Math.round(
+    0.30 * STATE.ekonomi +
+    0.30 * STATE.kepercayaan +
+    0.25 * STATE.keamanan +
+    0.15 * avgWilayah
+  );
+
+  
+  if (crisisQueue.size === 0) {
+    STATE.ekonomi     = clamp(STATE.ekonomi + 1);
+    STATE.kepercayaan = clamp(STATE.kepercayaan + 1);
+  }
+
+  
+  STATE.anggaran += Math.round(STATE.ekonomi * 0.8);
+
+  STATE.ekonomi     = clamp(STATE.ekonomi);
+  STATE.keamanan    = clamp(STATE.keamanan);
+  STATE.kepercayaan = clamp(STATE.kepercayaan);
+  STATE.stabilitas  = clamp(STATE.stabilitas);
+
+  addLog(`📅 Hari ke-${STATE.hari} dimulai. Anggaran: ${STATE.anggaran}M`, 'info');
+
+  checkGameOver();
+  renderAll();
+  drawMap();
+}
+
+
+function prosesRequest(aksi) {
+  if (reqQueue.isEmpty()) { showNotif('Tidak ada request!'); return; }
+  const req = reqQueue.dequeue();
+  if (aksi === 'bantu') {
+    const cost = 10 + req.kemarahan * 3;
+    if (STATE.anggaran < cost) { showNotif(`Anggaran kurang! Butuh ${cost}M`); reqQueue.items.unshift(req); return; }
+    STATE.anggaran -= cost;
+    STATE.kepercayaan = clamp(STATE.kepercayaan + 5);
+    const targetId = rand(gameMap.nodes.length);
+    gameMap.distribusiBantuan(targetId, 20);
+    addLog(`✅ Request "${req.desc}" di ${req.wilayah} ditangani (-${cost}M)`, 'ok');
+  } else {
+    STATE.kepercayaan = clamp(STATE.kepercayaan - req.kemarahan);
+    STATE.stabilitas  = clamp(STATE.stabilitas - 2);
+    addLog(`⚠️ Request "${req.desc}" diabaikan. Kepercayaan turun.`, 'warn');
+  }
+  renderAll(); drawMap();
+}
+
+function tanganiKrisis(aksi) {
+  if (crisisQueue.isEmpty()) { showNotif('Tidak ada krisis!'); return; }
+  const c = crisisQueue.pop();
+  const baseCost = c.urgensi * 2;
+
+  if (aksi === 'kirim_bantuan') {
+    if (STATE.anggaran < baseCost) { showNotif(`Anggaran kurang! Butuh ${baseCost}M`); crisisQueue.heap.unshift(c); return; }
+    STATE.anggaran  -= baseCost;
+    STATE.ekonomi    = clamp(STATE.ekonomi + 5);
+    STATE.kepercayaan= clamp(STATE.kepercayaan + 8);
+    STATE.stabilitas = clamp(STATE.stabilitas + 5);
+    addLog(`✅ Krisis "${c.nama}" berhasil diatasi dengan bantuan (-${baseCost}M)`, 'ok');
+  } else if (aksi === 'negosiasi') {
+    const cost = Math.floor(baseCost / 2);
+    if (STATE.anggaran < cost) { showNotif(`Anggaran kurang!`); crisisQueue.heap.unshift(c); return; }
+    STATE.anggaran -= cost;
+    STATE.kepercayaan = clamp(STATE.kepercayaan + 5);
+    addLog(`🤝 Negosiasi berhasil meredam "${c.nama}" (-${cost}M)`, 'ok');
+  } else if (aksi === 'tambah_aparat') {
+    const cost = Math.floor(baseCost * 3 / 4);
+    if (STATE.anggaran < cost) { showNotif(`Anggaran kurang!`); crisisQueue.heap.unshift(c); return; }
+    STATE.anggaran -= cost;
+    STATE.keamanan   = clamp(STATE.keamanan + 10);
+    STATE.kepercayaan= clamp(STATE.kepercayaan - 3);
+    addLog(`🪖 Aparat dikerahkan. Keamanan naik, kepercayaan turun (-${cost}M)`, 'warn');
+  } else {
+    STATE.ekonomi    = clamp(STATE.ekonomi    + Math.floor(c.de));
+    STATE.keamanan   = clamp(STATE.keamanan   + Math.floor(c.dk));
+    STATE.stabilitas = clamp(STATE.stabilitas + Math.floor(c.ds));
+    addLog(`💀 Krisis "${c.nama}" diabaikan! Dampak penuh diterima.`, 'crit');
+  }
+  renderAll(); drawMap();
+}
+
+function ambilKebijakan(id) {
+  const msg = policyTree.take(id, STATE);
+  if (msg.startsWith('✓')) {
+    addLog(`🏛️ Kebijakan: ${msg}`, 'ok');
+    showNotif(msg);
+    renderAll(); renderPolicies(); drawMap();
+  } else {
+    showNotif(msg);
+    addLog(msg, 'warn');
+  }
+}
+
+function distribusiBantuan(targetId) {
+  const { dist, prev } = gameMap.dijkstra(0);
+  if (dist[targetId] === Infinity) { showNotif('Wilayah tidak terjangkau!'); return; }
+  const biaya = dist[targetId] * 15;
+  if (STATE.anggaran < biaya) { showNotif(`Anggaran kurang! Butuh ${biaya}M`); return; }
+  STATE.anggaran -= biaya;
+  gameMap.distribusiBantuan(targetId, 30);
+  const path = gameMap.getPath(targetId, prev);
+  const pathStr = path.map(id => gameMap.nodes[id].nama).join(' → ');
+  addLog(`📦 Bantuan via Dijkstra: ${pathStr} (-${biaya}M)`, 'ok');
+  highlightPath = path;
+  setTimeout(() => { highlightPath = []; drawMap(); }, 3000);
+  renderAll(); drawMap();
+}
+
+
+function checkGameOver() {
+  let msg = '';
+  if (STATE.stabilitas <= 10)   msg = '💀 REVOLUSI! Pemerintahanmu runtuh karena stabilitas terlalu rendah.';
+  else if (STATE.ekonomi <= 5)  msg = '💸 BANGKRUT! Negara mengalami kebangkrutan total.';
+  else if (STATE.kepercayaan <= 5) msg = '⚔️ KUDETA! Rakyat kehilangan kepercayaan kepada pemerintah.';
+  else if (STATE.anggaran < -100)  msg = '💰 DEFISIT FATAL! Anggaran negara habis total.';
+
+  if (msg) {
+    STATE.game_over = true;
+    document.getElementById('gameover-msg').textContent = msg;
+    document.getElementById('gameover-days').textContent = `Bertahan selama ${STATE.hari} hari`;
+    document.getElementById('gameover-overlay').classList.add('show');
+  }
+}
+
+function resetGame() {
+  location.reload();
+}
+
+
+function renderAll() {
+  
+  document.getElementById('h-day').textContent    = `HARI KE-${STATE.hari}`;
+  document.getElementById('h-budget').textContent  = `💰 ${STATE.anggaran}M`;
+  document.getElementById('h-req-count').textContent    = reqQueue.size;
+  document.getElementById('h-crisis-count').textContent = crisisQueue.size;
+
+  
+  ['ekonomi','keamanan','kepercayaan','stabilitas'].forEach(k => {
+    const v = STATE[k];
+    document.getElementById('val-' + k).textContent = v;
+    const bar = document.getElementById('bar-' + k);
+    bar.style.width = v + '%';
+    
+    if (v > 60) bar.style.opacity = '1';
+    else if (v > 30) bar.style.opacity = '0.85';
+    else bar.style.opacity = '0.7';
+  });
+
+  renderRequests();
+  renderCrises();
+  renderRegions();
+}
+
+function renderRequests() {
+  const el = document.getElementById('request-list');
+  if (reqQueue.isEmpty()) {
+    el.innerHTML = '<div style="font-family:var(--body);font-size:12px;color:var(--text2);text-align:center;padding:16px;">Antrian kosong ✓</div>';
+    return;
+  }
+  el.innerHTML = reqQueue.items.slice(0, 6).map((r, i) => {
+    const isFirst = i === 0;
+    const typeColor = r.type === 'bantuan' ? 'blue' : r.type === 'laporan' ? 'orange' : 'purple';
+    return `
+    <div class="card card-request" style="${isFirst ? 'border-color:var(--gold)' : ''}">
+      <div class="card-title">${r.desc}</div>
+      <div class="card-sub">${r.wilayah} • Hari ${r.hari_masuk}</div>
+      <div class="card-badges">
+        <span class="badge badge-${typeColor}">${r.type.toUpperCase()}</span>
+        <span class="badge badge-${r.kemarahan > 6 ? 'red' : r.kemarahan > 3 ? 'orange' : 'green'}">😤 ${r.kemarahan}/10</span>
+      </div>
+      ${isFirst ? `<div class="urgency-bar"><div class="urgency-fill" style="width:${r.kemarahan*10}%"></div></div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="prosesRequest('bantu')">✓ BANTU (-${10+r.kemarahan*3}M)</button>
+        <button class="btn btn-danger"  onclick="prosesRequest('abaikan')">✗ ABAIKAN</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+  if (reqQueue.size > 6) el.innerHTML += `<div style="font-family:var(--pixel);font-size:6px;color:var(--text2);text-align:center;padding:6px;">+${reqQueue.size-6} request lainnya...</div>`;
+}
+
+function renderCrises() {
+  const el = document.getElementById('crisis-list');
+  if (crisisQueue.isEmpty()) {
+    el.innerHTML = '<div style="font-family:var(--body);font-size:12px;color:var(--text2);text-align:center;padding:20px;">Tidak ada krisis aktif ✓</div>';
+    return;
+  }
+  
+  el.innerHTML = [...crisisQueue.heap]
+    .sort((a,b) => b.urgensi - a.urgensi)
+    .slice(0, 5)
+    .map((c, i) => {
+      const isFirst = i === 0;
+      const urgColor = c.urgensi > 80 ? 'red' : c.urgensi > 60 ? 'orange' : 'gold';
+      return `
+      <div class="card card-crisis">
+        <div class="card-title">⚠ ${c.nama}</div>
+        <div class="card-sub">${c.wilayah} • Hari ${c.hari_muncul}</div>
+        <div class="card-badges">
+          <span class="badge badge-${urgColor}">URGENSI: ${c.urgensi}</span>
+          <span class="badge badge-red">E:${c.de} K:${c.dk} S:${c.ds}</span>
+        </div>
+        <div class="urgency-bar"><div class="urgency-fill" style="width:${c.urgensi}%"></div></div>
+        ${isFirst ? `<div class="btn-row">
+          <button class="btn btn-success" onclick="tanganiKrisis('kirim_bantuan')">📦 BANTUAN (-${c.urgensi*2}M)</button>
+          <button class="btn btn-info"    onclick="tanganiKrisis('negosiasi')">🤝 NEGO (-${Math.floor(c.urgensi)}M)</button>
+          <button class="btn btn-warn"    onclick="tanganiKrisis('tambah_aparat')">🪖 APARAT</button>
+          <button class="btn btn-danger"  onclick="tanganiKrisis('abaikan')">✗ ABAIKAN</button>
+        </div>` : ''}
+      </div>`;
+    }).join('');
+}
+
+function renderPolicies() {
+  const el = document.getElementById('policy-list');
+  const avail = policyTree.getAvailable();
+  const taken = policyTree.preOrder().filter(n => n.sudah_diambil);
+  const locked = policyTree.preOrder().filter(n => !n.tersedia && !n.sudah_diambil && n.kat !== 'root');
+
+  const katColor = {ekonomi:'blue',keamanan:'red',sosial:'green',infrastruktur:'gold'};
+
+  el.innerHTML = `<div style="font-family:var(--pixel);font-size:6px;color:var(--teal);margin-bottom:6px;">TERSEDIA (${avail.length})</div>`;
+  el.innerHTML += avail.map(p => `
+    <div class="card card-policy">
+      <div class="card-title">${p.nama}</div>
+      <div class="card-sub">${p.desc}</div>
+      <div class="card-badges">
+        <span class="badge badge-${katColor[p.kat] || 'blue'}">${p.kat.toUpperCase()}</span>
+        <span class="badge badge-gold">💰 ${p.efek.biaya}M</span>
+        <span class="badge badge-green">E${p.efek.e>=0?'+':''}${p.efek.e} K${p.efek.k>=0?'+':''}${p.efek.k}</span>
+        <span class="badge badge-blue">C${p.efek.c>=0?'+':''}${p.efek.c} S${p.efek.s>=0?'+':''}${p.efek.s}</span>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="ambilKebijakan(${p.id})" ${STATE.anggaran < p.efek.biaya ? 'disabled' : ''}>
+          ✓ TERAPKAN
+        </button>
+      </div>
+    </div>`).join('');
+
+  if (taken.length > 0) {
+    el.innerHTML += `<div style="font-family:var(--pixel);font-size:6px;color:var(--text2);margin:8px 0 4px;">SUDAH DIAMBIL (${taken.length})</div>`;
+    el.innerHTML += taken.map(p => `
+      <div class="card card-taken"><div class="card-title">✓ ${p.nama}</div>
+      <div class="card-sub" style="color:var(--teal)">Aktif</div></div>`).join('');
+  }
+}
+
+function renderRegions() {
+  const el = document.getElementById('region-list');
+  el.innerHTML = `<div style="font-family:var(--pixel);font-size:6px;color:var(--teal);margin-bottom:6px;">DISTRIBUSI BANTUAN (DIJKSTRA)</div>`;
+  el.innerHTML += gameMap.nodes.map(w => `
+    <div class="card" style="border-left-color:${w.demo_aktif ? 'var(--red)' : w.stabilitas < 50 ? 'var(--orange)' : 'var(--green)'}">
+      <div class="card-title">${w.nama} ${w.demo_aktif ? '⚠️DEMO' : ''}</div>
+      <div class="card-badges">
+        <span class="badge badge-blue">Stab: ${w.stabilitas}</span>
+        <span class="badge badge-green">Ekon: ${w.ekonomi}</span>
+        <span class="badge badge-red">Aman: ${w.keamanan}</span>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-info" onclick="distribusiBantuan(${w.id})">📦 KIRIM BANTUAN</button>
+      </div>
+    </div>`).join('');
+}
+
+
+let highlightPath = [];
+
+function resizeCanvas() {
+  const canvas = document.getElementById('map-canvas');
+  const panel = document.getElementById('map-panel');
+  canvas.width  = panel.clientWidth;
+  canvas.height = Math.max(300, panel.clientHeight - 80);
+}
+
+function drawMap() {
+  const canvas = document.getElementById('map-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const scaleX = W / 800, scaleY = H / 600;
+
+  ctx.clearRect(0, 0, W, H);
+
+  
+  const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)/2);
+  grad.addColorStop(0,   '#131628');
+  grad.addColorStop(0.6, '#0e1020');
+  grad.addColorStop(1,   '#080a14');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  
+  ctx.strokeStyle = 'rgba(64,80,160,0.08)';
+  ctx.lineWidth = 1;
+  for (let gx = 0; gx < W; gx += 40*scaleX) { ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke(); }
+  for (let gy = 0; gy < H; gy += 40*scaleY) { ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke(); }
+
+  
+  const edgesDrawn = new Set();
+  for (const node of gameMap.nodes) {
+    for (const e of node.adj) {
+      const key = Math.min(node.id, e.to) + '_' + Math.max(node.id, e.to);
+      if (edgesDrawn.has(key)) continue;
+      edgesDrawn.add(key);
+
+      const nx = node.x * scaleX, ny = node.y * scaleY;
+      const tx = gameMap.nodes[e.to].x * scaleX, ty = gameMap.nodes[e.to].y * scaleY;
+
+      const inPath = highlightPath.length > 1 &&
+        highlightPath.some((pid, i) => i < highlightPath.length-1 &&
+          ((pid === node.id && highlightPath[i+1] === e.to) ||
+           (pid === e.to   && highlightPath[i+1] === node.id)));
+
+      if (inPath) {
+        
+        ctx.strokeStyle = '#f0c040';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#f0c040';
+        ctx.shadowBlur = 12;
+        ctx.setLineDash([6, 4]);
+      } else if (e.tipe === 'laut') {
+        ctx.strokeStyle = 'rgba(64,160,255,0.35)';
+        ctx.lineWidth = 1.5;
+        ctx.shadowBlur = 0;
+        ctx.setLineDash([4, 6]);
+      } else {
+        ctx.strokeStyle = 'rgba(60,72,140,0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.shadowBlur = 0;
+        ctx.setLineDash([]);
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(nx, ny);
+      ctx.lineTo(tx, ty);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.setLineDash([]);
+
+      
+      const mx = (nx + tx) / 2, my = (ny + ty) / 2;
+      ctx.fillStyle = 'rgba(150,160,200,0.6)';
+      ctx.font = `${Math.round(9*scaleX)}px 'Courier Prime'`;
+      ctx.textAlign = 'center';
+      ctx.fillText(e.weight, mx, my);
+    }
+  }
+
+  
+  for (const w of gameMap.nodes) {
+    const nx = w.x * scaleX, ny = w.y * scaleY;
+    const r = Math.round((w.tipe === 'ibukota' ? 16 : w.tipe === 'kota' ? 12 : w.tipe === 'pelabuhan' ? 11 : 9) * Math.min(scaleX, scaleY));
+
+    
+    if (w.demo_aktif) {
+      ctx.beginPath();
+      ctx.arc(nx, ny, r + 8, 0, Math.PI*2);
+      const demoGrad = ctx.createRadialGradient(nx, ny, r, nx, ny, r+8);
+      demoGrad.addColorStop(0, 'rgba(232,64,64,0.5)');
+      demoGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = demoGrad;
+      ctx.fill();
+    } else if (w.stabilitas < 50) {
+      ctx.beginPath();
+      ctx.arc(nx, ny, r + 6, 0, Math.PI*2);
+      const warnGrad = ctx.createRadialGradient(nx, ny, r, nx, ny, r+6);
+      warnGrad.addColorStop(0, 'rgba(255,140,0,0.3)');
+      warnGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = warnGrad;
+      ctx.fill();
+    }
+
+    
+    const stability = w.stabilitas / 100;
+    let fillColor;
+    if (w.tipe === 'ibukota')   fillColor = '#c09010';
+    else if (w.demo_aktif)      fillColor = '#803020';
+    else if (w.stabilitas < 40) fillColor = '#7a4010';
+    else                        fillColor = `rgb(${Math.round(20+60*(1-stability))}, ${Math.round(40+80*stability)}, ${Math.round(60+100*stability)})`;
+
+    ctx.beginPath();
+    ctx.arc(nx, ny, r, 0, Math.PI * 2);
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+    ctx.strokeStyle = w.tipe === 'ibukota' ? '#f0c040' : w.demo_aktif ? '#e84040' : '#4060c0';
+    ctx.lineWidth = w.tipe === 'ibukota' ? 2.5 : 1.5;
+    ctx.stroke();
+
+    
+    const icon = w.tipe === 'ibukota' ? '★' : w.tipe === 'kota' ? '▪' : w.tipe === 'pelabuhan' ? '⚓' : '·';
+    ctx.fillStyle = w.tipe === 'ibukota' ? '#f0c040' : '#d0d8ff';
+    ctx.font = `bold ${Math.round(10*Math.min(scaleX,scaleY))}px 'Courier Prime'`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(icon, nx, ny);
+
+    
+    const barW = r * 2.5, barH = 3;
+    const bx = nx - barW/2, by = ny + r + 4;
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(bx, by, barW, barH);
+    const stabColor = w.stabilitas > 60 ? '#40c060' : w.stabilitas > 30 ? '#f0a020' : '#e04040';
+    ctx.fillStyle = stabColor;
+    ctx.fillRect(bx, by, barW * (w.stabilitas/100), barH);
+
+    
+    ctx.fillStyle = w.demo_aktif ? '#ff8080' : w.tipe === 'ibukota' ? '#f0c040' : '#a0b0e0';
+    ctx.font = `${Math.round(8*Math.min(scaleX,scaleY))}px 'Press Start 2P'`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 4;
+    ctx.fillText(w.nama, nx, ny + r + 8);
+    ctx.shadowBlur = 0;
+  }
+
+  
+  ctx.font = `${Math.round(7*scaleX)}px 'Press Start 2P'`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  const legends = [
+    {color:'#f0c040', label:'Ibukota'},
+    {color:'#4080c0', label:'Kota'},
+    {color:'#409080', label:'Desa/Pelabuhan'},
+    {color:'#e84040', label:'DEMO AKTIF'},
+  ];
+  legends.forEach((lg, i) => {
+    ctx.fillStyle = lg.color;
+    ctx.fillRect(8, 8 + i*16, 10, 10);
+    ctx.fillStyle = 'rgba(180,190,220,0.8)';
+    ctx.fillText(lg.label, 22, 10 + i*16);
+  });
+}
+
+
+const canvas = document.getElementById('map-canvas');
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const scaleX = canvas.width / 800, scaleY = canvas.height / 600;
+
+  const tooltip = document.getElementById('map-tooltip');
+  let found = null;
+
+  for (const w of gameMap.nodes) {
+    const nx = w.x * scaleX, ny = w.y * scaleY;
+    const r = (w.tipe === 'ibukota' ? 16 : w.tipe === 'kota' ? 12 : 10) * Math.min(scaleX,scaleY);
+    if (Math.hypot(mx-nx, my-ny) < r + 6) { found = w; break; }
+  }
+
+  if (found) {
+    tooltip.style.display = 'block';
+    tooltip.style.left = (e.clientX + 16) + 'px';
+    tooltip.style.top  = (e.clientY - 10) + 'px';
+    tooltip.innerHTML = `
+      <strong>${found.nama}</strong>
+      Tipe: ${found.tipe}<br>
+      Populasi: ${found.populasi.toLocaleString()}<br>
+      Stabilitas: ${found.stabilitas}/100<br>
+      Ekonomi: ${found.ekonomi}/100<br>
+      Keamanan: ${found.keamanan}/100<br>
+      ${found.demo_aktif ? '<span style="color:#ff6060">⚠ DEMO AKTIF</span>' : '<span style="color:#60e080">✓ Kondisi Aman</span>'}
+    `;
+  } else {
+    tooltip.style.display = 'none';
+  }
+});
+
+canvas.addEventListener('mouseleave', () => {
+  document.getElementById('map-tooltip').style.display = 'none';
+});
+
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+let logEntries = [];
+function addLog(msg, type = 'info') {
+  logEntries.unshift({ day: STATE.hari, msg, type });
+  if (logEntries.length > 50) logEntries.pop();
+  const el = document.getElementById('event-log');
+  el.innerHTML = logEntries.slice(0,15).map(l =>
+    `<div class="log-entry log-${l.type}">
+      <span class="log-day">H${l.day}</span>
+      <span class="log-msg">${l.msg}</span>
+    </div>`
+  ).join('');
+}
+
+let notifTimer;
+function showNotif(msg) {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function showHelp() {
+  showNotif('📖 Jaga 4 stat di atas 10. Proses request & krisis sebelum next day!');
+}
+
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  drawMap();
+});
+
+
+window.addEventListener('DOMContentLoaded', () => {
+  initGame();
+  
+  setTimeout(() => {
+    const t = REQUEST_TEMPLATES[rand(REQUEST_TEMPLATES.length)];
+    reqQueue.enqueue(t.type, t.wilayah, t.desc, 1);
+    renderAll();
+    addLog(`📩 Request pertama masuk: "${t.desc}" dari ${t.wilayah}`, 'info');
+  }, 500);
+});
+</script>
+</body>
+</html>
